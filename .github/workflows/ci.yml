@@ -7,7 +7,31 @@ on:
     branches: [ main ]
 
 jobs:
-  test:
+  # Fast feedback: the whole suite against fakeredis, no services to wait for.
+  # This job also proves the suite has no hidden dependency on a running Redis.
+  unit:
+    name: Unit and behavioural tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Run tests
+        run: pytest -m "not integration" --cov=app --cov-report=term-missing --cov-fail-under=95
+
+  # The same behavioural tests again, this time against a real Redis, so any
+  # difference between fakeredis and the real server shows up here.
+  integration:
+    name: Integration tests (real Redis)
     runs-on: ubuntu-latest
 
     services:
@@ -15,17 +39,30 @@ jobs:
         image: redis:7
         ports:
           - 6379:6379
+        # Without a health check the job can start before Redis accepts
+        # connections, which shows up as a flaky first test.
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+          cache: pip
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pip install -r requirements-dev.txt
 
-      - name: Run tests
-        run: pytest tests/ --cov=app --cov-report=term-missing
+      - name: Run the full suite
+        env:
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+          # Turn "Redis unreachable" from a silent skip into a red build.
+          REQUIRE_REDIS: "1"
+        run: pytest -ra

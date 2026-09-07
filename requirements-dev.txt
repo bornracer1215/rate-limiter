@@ -1,0 +1,13 @@
+# Test and tooling dependencies. Install with:
+#   pip install -r requirements.txt -r requirements-dev.txt
+-r requirements.txt
+
+pytest==9.0.3
+pytest-cov==7.1.0
+httpx==0.28.1          # required by fastapi.testclient.TestClient
+
+# In-process Redis so the full suite runs without a Redis server.
+# The [lua] extra pulls in lupa, which executes the EVAL scripts.
+fakeredis[lua]==2.37.1
+
+locust==2.43.4         # load testing (locustfile.py)

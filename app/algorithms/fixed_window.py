@@ -14,7 +14,7 @@ class FixedWindowCounter(RateLimiter):
         results = pipe.execute()
 
         count = results[0]
-        reamining = max(0, limit - count)
+        remaining = max(0, limit - count)
         allowed = count <= limit
 
-        return allowed, reamining 
+        return allowed, remaining 
