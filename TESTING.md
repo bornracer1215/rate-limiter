@@ -366,29 +366,3 @@ docker run -d -p 6379:6379 redis:7
 Without it, those tests skip. Set `REQUIRE_REDIS=1` to make a missing server an
 error instead.
 
----
-
-## 12. If you're asked about this in an interview
-
-Things in this suite worth being able to talk about:
-
-- **Tests that found real bugs, not tests written after the fact to agree with
-  the code.** Four defects: a sorted-set member collision that silently
-  under-counted requests, two unhandled `ZeroDivisionError`s, and a negative
-  `remaining` leaking through the API.
-- **Contract testing.** One parametrised suite over three implementations, so
-  the shared promise is written once and a new algorithm inherits it.
-- **A deliberate mock/fake/real split**, with a clear account of what each can
-  and cannot catch — and a concrete example of a bug that mocks structurally
-  could not have found.
-- **The same behavioural tests running against both fakeredis and real Redis**
-  from a single parametrised fixture.
-- **A fully deterministic suite** — no `sleep`, no wall-clock dependency, about
-  two seconds for 111 test cases including one that simulates ten minutes of
-  idle time.
-- **Documented known behaviour.** `test_twice_the_limit_can_pass_across_a_boundary`
-  pins the fixed window's boundary burst as an accepted trade-off rather than
-  leaving it as an undiscovered surprise. Knowing which behaviours are bugs and
-  which are trade-offs is most of the job.
-- **CI that can't lie to you** — skips-as-failures in the integration job, and a
-  coverage floor.
